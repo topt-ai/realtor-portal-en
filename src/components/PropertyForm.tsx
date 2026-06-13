@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UploadCloud, X, Loader2, Star } from 'lucide-react';
 import { Property } from '@/types';
@@ -10,27 +10,92 @@ interface PropertyFormProps {
   isEditing?: boolean;
 }
 
+const DRAFT_KEY = 'tuwebsv-property-draft';
+const AUTOSAVE_INTERVAL_MS = 30_000;
+
+const PROPERTY_TYPE_OPTIONS: { value: NonNullable<Property['property_type']>; label: string }[] = [
+  { value: 'casa', label: 'Casa' },
+  { value: 'apartamento', label: 'Apartamento' },
+  { value: 'terreno', label: 'Terreno' },
+  { value: 'local comercial', label: 'Local Comercial' },
+  { value: 'oficina', label: 'Oficina' },
+];
+
+const SOLD_STATUS_OPTIONS: { value: Property['sold_status']; label: string }[] = [
+  { value: 'disponible', label: 'Disponible' },
+  { value: 'vendido', label: 'Vendido' },
+  { value: 'alquilado', label: 'Alquilado' },
+];
+
+const emptyDraft = (): Partial<Property> => ({
+  titulo: '',
+  precio: '',
+  ubicacion: '',
+  descripcion: '',
+  habitaciones: '',
+  banos: '',
+  metros: '',
+  whatsapp: '',
+  fotos: [],
+  status: 'publicado',
+  featured: false,
+  tipo: 'venta',
+  property_type: 'casa',
+  negociable: false,
+  sold_status: 'disponible',
+  video_url: '',
+});
+
 export default function PropertyForm({ initialData, isEditing }: PropertyFormProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [formData, setFormData] = useState<Partial<Property>>({
-    titulo: '',
-    precio: '',
-    ubicacion: '',
-    descripcion: '',
-    habitaciones: '',
-    banos: '',
-    metros: '',
-    whatsapp: '',
-    fotos: [],
-    status: 'publicado',
-    featured: false,
-    tipo: 'venta',
+  const [formData, setFormData] = useState<Partial<Property>>(() => ({
+    ...emptyDraft(),
     ...initialData,
-  });
+  }));
+  const [draftRestoredAt, setDraftRestoredAt] = useState<string | null>(null);
+
+  // Restore draft on mount (only for new listings)
+  useEffect(() => {
+    if (isEditing) return;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as { savedAt: string; data: Partial<Property> };
+      if (!saved?.data) return;
+      const restore = window.confirm(
+        `Encontramos un borrador sin guardar (${new Date(saved.savedAt).toLocaleString()}). ¿Deseas restaurarlo?`
+      );
+      if (restore) {
+        setFormData({ ...emptyDraft(), ...saved.data });
+        setDraftRestoredAt(saved.savedAt);
+      } else {
+        localStorage.removeItem(DRAFT_KEY);
+      }
+    } catch (err) {
+      console.warn('Draft restore failed:', err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Autosave draft every 30s (only for new listings)
+  useEffect(() => {
+    if (isEditing) return;
+    const id = setInterval(() => {
+      try {
+        localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ savedAt: new Date().toISOString(), data: formData })
+        );
+      } catch (err) {
+        console.warn('Draft autosave failed:', err);
+      }
+    }, AUTOSAVE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [formData, isEditing]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -58,6 +123,12 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
         tipo: formData.tipo || 'venta',
         status: formData.status || 'publicado',
         featured: formData.featured ?? false,
+        property_type: formData.property_type,
+        negociable: formData.negociable ?? false,
+        sold_status: formData.sold_status || 'disponible',
+        agent_name: formData.agent_name,
+        website_url: formData.website_url,
+        video_url: formData.video_url,
       } as Omit<Property, 'id' | 'agent_id' | 'fotos'>;
 
       const imageUrls = formData.fotos || [];
@@ -71,6 +142,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
       }
 
       if (success) {
+        if (!isEditing) localStorage.removeItem(DRAFT_KEY);
         navigate('/dashboard');
       } else {
         alert('Error guardando la propiedad. Por favor, intenta de nuevo.');
@@ -119,7 +191,6 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
           {isEditing ? 'Editar Propiedad' : 'Agregar Propiedad'}
         </h1>
         <div className="flex items-center gap-4 flex-wrap">
-          {/* Featured toggle */}
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, featured: !prev.featured }))}
@@ -133,7 +204,6 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             Destacada
           </button>
 
-          {/* Status dropdown */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">Estado:</span>
             <select
@@ -150,6 +220,12 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
         </div>
       </div>
 
+      {draftRestoredAt && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-2">
+          Borrador restaurado del {new Date(draftRestoredAt).toLocaleString()}.
+        </div>
+      )}
+
       <div className="bg-brand-white rounded-xl shadow-sm p-6 space-y-6 border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -165,7 +241,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Tipo</label>
+            <label className="block text-sm font-medium text-gray-700">Tipo de Operación</label>
             <select
               name="tipo"
               required
@@ -175,6 +251,32 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             >
               <option value="venta">Venta</option>
               <option value="alquiler">Alquiler</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Tipo de Propiedad</label>
+            <select
+              name="property_type"
+              value={formData.property_type || 'casa'}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
+            >
+              {PROPERTY_TYPE_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Disponibilidad</label>
+            <select
+              name="sold_status"
+              value={formData.sold_status || 'disponible'}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
+            >
+              {SOLD_STATUS_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
           <div className="space-y-2">
@@ -189,6 +291,19 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
               placeholder="0"
             />
+          </div>
+          <div className="space-y-2 flex flex-col">
+            <label className="block text-sm font-medium text-gray-700">Negociable</label>
+            <label className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg cursor-pointer select-none">
+              <input
+                type="checkbox"
+                name="negociable"
+                checked={!!formData.negociable}
+                onChange={(e) => setFormData(prev => ({ ...prev, negociable: e.target.checked }))}
+                className="rounded"
+              />
+              <span className="text-sm text-gray-700">Precio negociable</span>
+            </label>
           </div>
           <div className="space-y-2 md:col-span-2">
             <label className="block text-sm font-medium text-gray-700">Ubicación</label>
@@ -258,6 +373,19 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
               placeholder="Ej. 50370000000"
+            />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700">
+              URL de Video <span className="text-gray-400 font-normal">(opcional, YouTube o MP4)</span>
+            </label>
+            <input
+              type="url"
+              name="video_url"
+              value={formData.video_url || ''}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
+              placeholder="https://youtube.com/watch?v=... o https://.../video.mp4"
             />
           </div>
         </div>

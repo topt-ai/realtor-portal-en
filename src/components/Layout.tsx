@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Home, PlusSquare, Menu, X, LogOut } from 'lucide-react';
+import { Home, PlusSquare, Menu, X, LogOut, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 
@@ -15,6 +15,9 @@ export default function Layout() {
 
   const displayName = user?.user_metadata?.full_name || user?.email || 'Agente';
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const websiteUrl =
+    (user?.user_metadata?.website_url as string | undefined) ||
+    'https://jarvisrealty.tuwebsv.com';
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-brand-bg">
@@ -55,9 +58,21 @@ export default function Layout() {
             </div>
           )}
           <div className="overflow-hidden flex-1">
-            <p className="text-sm text-gray-400">Agente</p>
+            <p className="text-sm text-gray-400">Bienvenido,</p>
             <p className="font-medium truncate">{displayName}</p>
           </div>
+        </div>
+
+        <div className="px-4 pt-4">
+          <a
+            href={websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+          >
+            <Globe size={20} />
+            Visitar mi sitio web
+          </a>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2">

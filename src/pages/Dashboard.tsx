@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit2, Trash2, Image as ImageIcon, Star } from 'lucide-react';
-import { Property } from '@/types';
-import { fetchListings, deleteListing, toggleListingStatus } from '@/lib/api';
+import { Property, SoldStatus } from '@/types';
+import { fetchListings, deleteListing, toggleListingStatus, updateSoldStatus } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
 const STATUS_LABELS: Record<Property['status'], string> = {
@@ -17,10 +17,24 @@ const STATUS_COLORS: Record<Property['status'], string> = {
   archivado: 'bg-gray-100 text-gray-500',
 };
 
+const SOLD_STATUS_LABELS: Record<SoldStatus, string> = {
+  disponible: 'Disponible',
+  vendido: 'Vendido',
+  alquilado: 'Alquilado',
+};
+
+const SOLD_STATUS_COLORS: Record<SoldStatus, string> = {
+  disponible: 'bg-green-100 text-green-700',
+  vendido: 'bg-red-100 text-red-700',
+  alquilado: 'bg-blue-100 text-blue-700',
+};
+
 export default function Dashboard() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+
+  const displayName = user?.user_metadata?.full_name || user?.email || 'Agente';
 
   const loadProperties = async () => {
     if (!user) return;
@@ -40,6 +54,12 @@ export default function Dashboard() {
     await toggleListingStatus(id, user.id, status);
   };
 
+  const handleSoldStatusChange = async (id: string, sold_status: SoldStatus) => {
+    if (!user) return;
+    setProperties(prev => prev.map(p => p.id === id ? { ...p, sold_status } : p));
+    await updateSoldStatus(id, user.id, sold_status);
+  };
+
   const handleDelete = async (id: string) => {
     if (!user) return;
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta propiedad?')) return;
@@ -54,12 +74,16 @@ export default function Dashboard() {
   const total = properties.length;
   const publicados = properties.filter(p => p.status === 'publicado').length;
   const borradores = properties.filter(p => p.status === 'borrador').length;
-  const archivados = properties.filter(p => p.status === 'archivado').length;
+  const featured = properties.filter(p => p.featured).length;
+  const vendidos = properties.filter(p => p.sold_status === 'vendido').length;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-brand-primary">Mis Propiedades</h1>
+        <div>
+          <p className="text-sm text-gray-500">Bienvenido,</p>
+          <h1 className="text-2xl font-bold text-brand-primary">{displayName}</h1>
+        </div>
         <Link
           to="/agregar"
           className="bg-brand-accent hover:bg-brand-accent-hover text-brand-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -69,12 +93,13 @@ export default function Dashboard() {
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
           { label: 'Total', value: total, color: 'bg-blue-50 text-blue-700' },
           { label: 'Publicados', value: publicados, color: 'bg-green-50 text-green-700' },
           { label: 'Borradores', value: borradores, color: 'bg-yellow-50 text-yellow-700' },
-          { label: 'Archivados', value: archivados, color: 'bg-gray-50 text-gray-500' },
+          { label: 'Destacados', value: featured, color: 'bg-amber-50 text-amber-700' },
+          { label: 'Vendidos', value: vendidos, color: 'bg-red-50 text-red-700' },
         ].map(stat => (
           <div key={stat.label} className={`rounded-xl px-5 py-4 ${stat.color} flex flex-col gap-1`}>
             <span className="text-2xl font-bold">{stat.value}</span>
@@ -85,7 +110,7 @@ export default function Dashboard() {
 
       <div className="bg-brand-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+          <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100 text-sm text-gray-500">
                 <th className="p-4 font-medium">Foto</th>
@@ -93,17 +118,18 @@ export default function Dashboard() {
                 <th className="p-4 font-medium">Precio</th>
                 <th className="p-4 font-medium">Ubicación</th>
                 <th className="p-4 font-medium">Estado</th>
+                <th className="p-4 font-medium">Disponibilidad</th>
                 <th className="p-4 font-medium text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-400">Cargando...</td>
+                  <td colSpan={7} className="p-8 text-center text-gray-400">Cargando...</td>
                 </tr>
               ) : properties.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                  <td colSpan={7} className="p-8 text-center text-gray-500">
                     No tienes propiedades publicadas.
                   </td>
                 </tr>
@@ -130,10 +156,15 @@ export default function Dashboard() {
                           <Star size={14} className="text-yellow-400 fill-yellow-400 shrink-0" />
                         )}
                       </div>
-                      <span className="text-xs text-gray-400 capitalize">{property.tipo}</span>
+                      <span className="text-xs text-gray-400 capitalize">
+                        {property.property_type ? `${property.property_type} · ` : ''}{property.tipo}
+                      </span>
                     </td>
                     <td className="p-4 text-gray-600">
                       ${Number(property.precio || 0).toLocaleString()}
+                      {property.negociable && (
+                        <span className="block text-xs text-gray-400">Negociable</span>
+                      )}
                     </td>
                     <td className="p-4 text-gray-600">{property.ubicacion}</td>
                     <td className="p-4">
@@ -146,6 +177,19 @@ export default function Dashboard() {
                       >
                         {(Object.keys(STATUS_LABELS) as Property['status'][]).map(s => (
                           <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="p-4">
+                      <select
+                        value={property.sold_status}
+                        onChange={(e) =>
+                          handleSoldStatusChange(property.id, e.target.value as SoldStatus)
+                        }
+                        className={`text-xs font-medium px-2 py-1 rounded-full border-0 outline-none cursor-pointer ${SOLD_STATUS_COLORS[property.sold_status]}`}
+                      >
+                        {(Object.keys(SOLD_STATUS_LABELS) as SoldStatus[]).map(s => (
+                          <option key={s} value={s}>{SOLD_STATUS_LABELS[s]}</option>
                         ))}
                       </select>
                     </td>

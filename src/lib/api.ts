@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Property } from '../types';
+import { Property, PropertyType, SoldStatus } from '../types';
 
 type ListingRow = {
   id: string;
@@ -14,6 +14,12 @@ type ListingRow = {
   tipo: string;
   status: string;
   featured: boolean;
+  property_type: string | null;
+  negociable: boolean | null;
+  sold_status: string | null;
+  agent_name: string | null;
+  website_url: string | null;
+  video_url: string | null;
   agent_id: string;
   listing_images: { url: string; order_index: number }[];
 };
@@ -35,8 +41,38 @@ function rowToProperty(row: ListingRow): Property {
     tipo: (row.tipo === 'alquiler' ? 'alquiler' : 'venta') as Property['tipo'],
     status: (row.status as Property['status']) ?? 'publicado',
     featured: row.featured ?? false,
+    property_type: (row.property_type as PropertyType) ?? undefined,
+    negociable: row.negociable ?? false,
+    sold_status: (row.sold_status as SoldStatus) ?? 'disponible',
+    agent_name: row.agent_name ?? undefined,
+    website_url: row.website_url ?? undefined,
+    video_url: row.video_url ?? undefined,
     fotos: images,
     agent_id: row.agent_id,
+  };
+}
+
+type ListingPayload = Omit<Property, 'id' | 'agent_id' | 'fotos'>;
+
+function payloadToRow(data: ListingPayload) {
+  return {
+    titulo: data.titulo,
+    precio: data.precio,
+    ubicacion: data.ubicacion,
+    descripcion: data.descripcion,
+    habitaciones: data.habitaciones,
+    banos: data.banos,
+    metros: data.metros,
+    whatsapp: data.whatsapp,
+    tipo: data.tipo,
+    status: data.status,
+    featured: data.featured,
+    property_type: data.property_type ?? null,
+    negociable: data.negociable ?? false,
+    sold_status: data.sold_status ?? 'disponible',
+    agent_name: data.agent_name ?? null,
+    website_url: data.website_url ?? null,
+    video_url: data.video_url ?? null,
   };
 }
 
@@ -56,25 +92,12 @@ export async function fetchListings(agentId: string): Promise<Property[]> {
 
 export async function addListing(
   agentId: string,
-  data: Omit<Property, 'id' | 'agent_id' | 'fotos'>,
+  data: ListingPayload,
   imageUrls: string[]
 ): Promise<string | null> {
   const { data: row, error } = await supabase
     .from('listings')
-    .insert({
-      titulo: data.titulo,
-      precio: data.precio,
-      ubicacion: data.ubicacion,
-      descripcion: data.descripcion,
-      habitaciones: data.habitaciones,
-      banos: data.banos,
-      metros: data.metros,
-      whatsapp: data.whatsapp,
-      tipo: data.tipo,
-      status: data.status,
-      featured: data.featured,
-      agent_id: agentId,
-    })
+    .insert({ ...payloadToRow(data), agent_id: agentId })
     .select('id')
     .single();
 
@@ -95,24 +118,12 @@ export async function addListing(
 export async function updateListing(
   listingId: string,
   agentId: string,
-  data: Omit<Property, 'id' | 'agent_id' | 'fotos'>,
+  data: ListingPayload,
   imageUrls: string[]
 ): Promise<boolean> {
   const { error } = await supabase
     .from('listings')
-    .update({
-      titulo: data.titulo,
-      precio: data.precio,
-      ubicacion: data.ubicacion,
-      descripcion: data.descripcion,
-      habitaciones: data.habitaciones,
-      banos: data.banos,
-      metros: data.metros,
-      whatsapp: data.whatsapp,
-      tipo: data.tipo,
-      status: data.status,
-      featured: data.featured,
-    })
+    .update(payloadToRow(data))
     .eq('id', listingId)
     .eq('agent_id', agentId);
 
@@ -158,6 +169,24 @@ export async function toggleListingStatus(
 
   if (error) {
     console.error('toggleListingStatus error:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function updateSoldStatus(
+  listingId: string,
+  agentId: string,
+  sold_status: SoldStatus
+): Promise<boolean> {
+  const { error } = await supabase
+    .from('listings')
+    .update({ sold_status })
+    .eq('id', listingId)
+    .eq('agent_id', agentId);
+
+  if (error) {
+    console.error('updateSoldStatus error:', error);
     return false;
   }
   return true;
