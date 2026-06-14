@@ -7,7 +7,7 @@ export const AGENT_CONFIG = {
   tagline: 'Finding the home you deserve',
   bio: '',
   whatsapp: '50372018215',
-  website: 'https://marcusreid.thecitadl.com',
+  website: 'https://realtor-website-en.vercel.app',
   portal: 'https://portal.thecitadl.com',
   primaryColor: '#C9A84C',
   logo: '/logo.svg',
