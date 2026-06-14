@@ -44,16 +44,16 @@ export const AGENT_CONFIG = {
   tagline: 'Encontrando el hogar que mereces',
   bio: '',
   whatsapp: '50372018215',
-  website: 'https://jarvisrealty.tuwebsv.com',
-  portal:  'https://portal.tuwebsv.com',
+  website: 'https://jarvisrealty.thecitadl.com',
+  portal:  'https://portal.thecitadl.com',
   primaryColor: '#C9A84C',
   logo: '/logo.svg',
 };
 
 export const BRAND_CONFIG = {
-  name: 'TuWebSV',          // platform brand (the company running the portals)
-  supportUrl: 'https://tuwebsv.com',
-  storagePrefix: 'tuwebsv',  // namespaces localStorage keys per deployment
+  name: 'The Citadl',          // platform brand (the company running the portals)
+  supportUrl: 'mailto:hello@thecitadl.com',
+  storagePrefix: 'thecitadl',  // namespaces localStorage keys per deployment
 };
 ```
 

@@ -7,8 +7,8 @@ export const AGENT_CONFIG = {
   tagline: 'Finding the home you deserve',
   bio: '',
   whatsapp: '50372018215',
-  website: 'https://marcusreid.tuwebsv.com',
-  portal: 'https://portal.tuwebsv.com',
+  website: 'https://marcusreid.thecitadl.com',
+  portal: 'https://portal.thecitadl.com',
   primaryColor: '#C9A84C',
   logo: '/logo.svg',
 };
@@ -19,11 +19,11 @@ export const AGENT_CONFIG = {
  * you're white-labeling the platform too.
  */
 export const BRAND_CONFIG = {
-  name: 'TuWebSV',
-  supportUrl: 'https://tuwebsv.com',
+  name: 'The Citadl',
+  supportUrl: 'mailto:hello@thecitadl.com',
   /** Prefix for localStorage keys, so two deployments on the same
    *  origin don't clobber each other's drafts/sessions. */
-  storagePrefix: 'tuwebsv',
+  storagePrefix: 'thecitadl',
 };
 
 export const STORAGE_KEYS = {
