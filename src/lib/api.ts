@@ -95,24 +95,29 @@ export async function addListing(
   data: ListingPayload,
   imageUrls: string[]
 ): Promise<string | null> {
-  const { data: row, error } = await supabase
-    .from('listings')
-    .insert({ ...payloadToRow(data), agent_id: agentId })
-    .select('id')
-    .single();
+  try {
+    const { data: row, error } = await supabase
+      .from('listings')
+      .insert({ ...payloadToRow(data), agent_id: agentId })
+      .select('id')
+      .single();
 
-  if (error || !row) {
-    console.error('addListing error:', error);
-    return null;
+    if (error || !row) {
+      throw error ?? new Error('Insert returned no row');
+    }
+
+    if (imageUrls.length > 0) {
+      const { error: imgError } = await supabase.from('listing_images').insert(
+        imageUrls.map((url, i) => ({ listing_id: row.id, url, order_index: i }))
+      );
+      if (imgError) throw imgError;
+    }
+
+    return row.id;
+  } catch (error: any) {
+    console.error('Full error:', JSON.stringify(error))
+    throw new Error(JSON.stringify(error))
   }
-
-  if (imageUrls.length > 0) {
-    await supabase.from('listing_images').insert(
-      imageUrls.map((url, i) => ({ listing_id: row.id, url, order_index: i }))
-    );
-  }
-
-  return row.id;
 }
 
 export async function updateListing(

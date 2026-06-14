@@ -150,7 +150,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
       }
     } catch (error: any) {
       console.error('Submit error:', error);
-      alert('An error occurred: ' + error.message);
+      alert('Error: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
