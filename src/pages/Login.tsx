@@ -41,7 +41,7 @@ export default function Login() {
   // Show "session expired" banner when redirected here mid-use.
   useEffect(() => {
     if (searchParams.get('reason') === 'expired') {
-      setError('Sesión expirada, inicia sesión de nuevo');
+      setError('Session expired, please sign in again');
       const next = new URLSearchParams(searchParams);
       next.delete('reason');
       setSearchParams(next, { replace: true });
@@ -72,7 +72,7 @@ export default function Login() {
     setError(null);
     setInfo(null);
     if (!email) {
-      setError('Ingresa tu correo para enviarte el enlace.');
+      setError('Enter your email so we can send you the link.');
       return;
     }
     setResetting(true);
@@ -86,7 +86,7 @@ export default function Login() {
       setError(translateAuthError(error.message));
       return;
     }
-    setInfo('Revisa tu correo. Te enviamos un enlace para restablecer tu contraseña.');
+    setInfo('Check your email. We sent you a link to reset your password.');
   };
 
   return (
@@ -95,7 +95,7 @@ export default function Login() {
         <div className="text-center space-y-1">
           <h1 className="text-3xl font-bold text-brand-primary tracking-tight">{BRAND_CONFIG.name}</h1>
           <p className="text-gray-500 text-sm">
-            {view === 'forgot' ? 'Restablecer contraseña' : 'Portal de Agentes Inmobiliarios'}
+            {view === 'forgot' ? 'Reset password' : 'Real Estate Agent Portal'}
           </p>
         </div>
 
@@ -113,7 +113,7 @@ export default function Login() {
         {view === 'login' ? (
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Correo electrónico</label>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
               <input
                 type="email"
                 required
@@ -121,12 +121,12 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
-                placeholder="agente@ejemplo.com"
+                placeholder="agent@example.com"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Contraseña</label>
+              <label className="block text-sm font-medium text-gray-700">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -142,7 +142,7 @@ export default function Login() {
                   onClick={() => setShowPassword(v => !v)}
                   className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
                   tabIndex={-1}
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -152,7 +152,7 @@ export default function Login() {
                 onClick={() => { setView('forgot'); setError(null); setInfo(null); }}
                 className="text-xs text-brand-accent hover:underline cursor-pointer"
               >
-                ¿Olvidaste tu contraseña?
+                Forgot your password?
               </button>
             </div>
 
@@ -164,7 +164,7 @@ export default function Login() {
                   onChange={(e) => setRemember(e.target.checked)}
                   className="rounded"
                 />
-                Recordarme
+                Remember me
               </label>
             </div>
 
@@ -174,16 +174,16 @@ export default function Login() {
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium rounded-xl transition-colors disabled:opacity-60 cursor-pointer"
             >
               {loading && <Loader2 className="animate-spin h-5 w-5" />}
-              Iniciar Sesión
+              Sign In
             </button>
           </form>
         ) : (
           <form onSubmit={handleSendReset} className="space-y-4">
             <p className="text-sm text-gray-600">
-              Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña.
+              Enter your email and we'll send you a link to create a new password.
             </p>
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Correo electrónico</label>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
               <input
                 type="email"
                 required
@@ -191,7 +191,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
-                placeholder="agente@ejemplo.com"
+                placeholder="agent@example.com"
               />
             </div>
 
@@ -201,7 +201,7 @@ export default function Login() {
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium rounded-xl transition-colors disabled:opacity-60 cursor-pointer"
             >
               {resetting && <Loader2 className="animate-spin h-5 w-5" />}
-              Enviar link
+              Send link
             </button>
 
             <button
@@ -210,20 +210,20 @@ export default function Login() {
               className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-brand-primary cursor-pointer"
             >
               <ArrowLeft size={14} />
-              Volver
+              Back
             </button>
           </form>
         )}
 
         <p className="text-xs text-center text-gray-500 pt-2 border-t border-gray-100">
-          ¿No tienes acceso?{' '}
+          Don't have access?{' '}
           <a
             href={BRAND_CONFIG.supportUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand-accent hover:underline font-medium"
           >
-            Contacta a {BRAND_CONFIG.name}
+            Contact {BRAND_CONFIG.name}
           </a>
         </p>
       </div>

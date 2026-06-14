@@ -3,11 +3,11 @@
  * for a new agent.
  */
 export const AGENT_CONFIG = {
-  name: 'Jarvis Mendez',
-  tagline: 'Encontrando el hogar que mereces',
+  name: 'Marcus Reid',
+  tagline: 'Finding the home you deserve',
   bio: '',
   whatsapp: '50372018215',
-  website: 'https://jarvisrealty.tuwebsv.com',
+  website: 'https://marcusreid.tuwebsv.com',
   portal: 'https://portal.tuwebsv.com',
   primaryColor: '#C9A84C',
   logo: '/logo.svg',

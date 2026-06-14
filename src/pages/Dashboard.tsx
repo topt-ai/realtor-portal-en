@@ -6,9 +6,9 @@ import { fetchListings, deleteListing, toggleListingStatus, updateSoldStatus } f
 import { useAuth } from '@/lib/auth';
 
 const STATUS_LABELS: Record<Property['status'], string> = {
-  publicado: 'Publicado',
-  borrador: 'Borrador',
-  archivado: 'Archivado',
+  publicado: 'Published',
+  borrador: 'Draft',
+  archivado: 'Archived',
 };
 
 const STATUS_COLORS: Record<Property['status'], string> = {
@@ -18,9 +18,9 @@ const STATUS_COLORS: Record<Property['status'], string> = {
 };
 
 const SOLD_STATUS_LABELS: Record<SoldStatus, string> = {
-  disponible: 'Disponible',
-  vendido: 'Vendido',
-  alquilado: 'Alquilado',
+  disponible: 'Available',
+  vendido: 'Sold',
+  alquilado: 'Rented',
 };
 
 const SOLD_STATUS_COLORS: Record<SoldStatus, string> = {
@@ -34,7 +34,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  const displayName = user?.user_metadata?.full_name || user?.email || 'Agente';
+  const displayName = user?.user_metadata?.full_name || user?.email || 'Agent';
 
   const loadProperties = async () => {
     if (!user) return;
@@ -62,12 +62,12 @@ export default function Dashboard() {
 
   const handleDelete = async (id: string) => {
     if (!user) return;
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta propiedad?')) return;
+    if (!window.confirm('Are you sure you want to delete this property?')) return;
     const success = await deleteListing(id, user.id);
     if (success) {
       setProperties(prev => prev.filter(p => p.id !== id));
     } else {
-      alert('Error eliminando propiedad');
+      alert('Error deleting property');
     }
   };
 
@@ -81,14 +81,14 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <p className="text-sm text-gray-500">Bienvenido,</p>
+          <p className="text-sm text-gray-500">Welcome,</p>
           <h1 className="text-2xl font-bold text-brand-primary">{displayName}</h1>
         </div>
         <Link
           to="/agregar"
           className="bg-brand-accent hover:bg-brand-accent-hover text-brand-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
-          Agregar Propiedad
+          Add Property
         </Link>
       </div>
 
@@ -96,10 +96,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
           { label: 'Total', value: total, color: 'bg-blue-50 text-blue-700' },
-          { label: 'Publicados', value: publicados, color: 'bg-green-50 text-green-700' },
-          { label: 'Borradores', value: borradores, color: 'bg-yellow-50 text-yellow-700' },
-          { label: 'Destacados', value: featured, color: 'bg-amber-50 text-amber-700' },
-          { label: 'Vendidos', value: vendidos, color: 'bg-red-50 text-red-700' },
+          { label: 'Published', value: publicados, color: 'bg-green-50 text-green-700' },
+          { label: 'Drafts', value: borradores, color: 'bg-yellow-50 text-yellow-700' },
+          { label: 'Featured', value: featured, color: 'bg-amber-50 text-amber-700' },
+          { label: 'Sold', value: vendidos, color: 'bg-red-50 text-red-700' },
         ].map(stat => (
           <div key={stat.label} className={`rounded-xl px-5 py-4 ${stat.color} flex flex-col gap-1`}>
             <span className="text-2xl font-bold">{stat.value}</span>
@@ -113,24 +113,24 @@ export default function Dashboard() {
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100 text-sm text-gray-500">
-                <th className="p-4 font-medium">Foto</th>
-                <th className="p-4 font-medium">Título</th>
-                <th className="p-4 font-medium">Precio</th>
-                <th className="p-4 font-medium">Ubicación</th>
-                <th className="p-4 font-medium">Estado</th>
-                <th className="p-4 font-medium">Disponibilidad</th>
-                <th className="p-4 font-medium text-right">Acciones</th>
+                <th className="p-4 font-medium">Photo</th>
+                <th className="p-4 font-medium">Title</th>
+                <th className="p-4 font-medium">Price</th>
+                <th className="p-4 font-medium">Location</th>
+                <th className="p-4 font-medium">Status</th>
+                <th className="p-4 font-medium">Availability</th>
+                <th className="p-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-400">Cargando...</td>
+                  <td colSpan={7} className="p-8 text-center text-gray-400">Loading...</td>
                 </tr>
               ) : properties.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-gray-500">
-                    No tienes propiedades publicadas.
+                    You have no published properties.
                   </td>
                 </tr>
               ) : (
@@ -163,7 +163,7 @@ export default function Dashboard() {
                     <td className="p-4 text-gray-600">
                       ${Number(property.precio || 0).toLocaleString()}
                       {property.negociable && (
-                        <span className="block text-xs text-gray-400">Negociable</span>
+                        <span className="block text-xs text-gray-400">Negotiable</span>
                       )}
                     </td>
                     <td className="p-4 text-gray-600">{property.ubicacion}</td>
@@ -198,14 +198,14 @@ export default function Dashboard() {
                         <Link
                           to={`/editar/${property.id}`}
                           className="p-2 text-gray-400 hover:text-brand-accent transition-colors"
-                          title="Editar"
+                          title="Edit"
                         >
                           <Edit2 size={18} />
                         </Link>
                         <button
                           onClick={() => handleDelete(property.id)}
                           className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                          title="Eliminar"
+                          title="Delete"
                         >
                           <Trash2 size={18} />
                         </button>

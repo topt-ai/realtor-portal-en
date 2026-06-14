@@ -15,17 +15,17 @@ const DRAFT_KEY = STORAGE_KEYS.propertyDraft;
 const AUTOSAVE_INTERVAL_MS = 30_000;
 
 const PROPERTY_TYPE_OPTIONS: { value: NonNullable<Property['property_type']>; label: string }[] = [
-  { value: 'casa', label: 'Casa' },
-  { value: 'apartamento', label: 'Apartamento' },
-  { value: 'terreno', label: 'Terreno' },
-  { value: 'local comercial', label: 'Local Comercial' },
-  { value: 'oficina', label: 'Oficina' },
+  { value: 'casa', label: 'House' },
+  { value: 'apartamento', label: 'Apartment' },
+  { value: 'terreno', label: 'Land' },
+  { value: 'local comercial', label: 'Commercial Space' },
+  { value: 'oficina', label: 'Office' },
 ];
 
 const SOLD_STATUS_OPTIONS: { value: Property['sold_status']; label: string }[] = [
-  { value: 'disponible', label: 'Disponible' },
-  { value: 'vendido', label: 'Vendido' },
-  { value: 'alquilado', label: 'Alquilado' },
+  { value: 'disponible', label: 'Available' },
+  { value: 'vendido', label: 'Sold' },
+  { value: 'alquilado', label: 'Rented' },
 ];
 
 const emptyDraft = (): Partial<Property> => ({
@@ -68,7 +68,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
       const saved = JSON.parse(raw) as { savedAt: string; data: Partial<Property> };
       if (!saved?.data) return;
       const restore = window.confirm(
-        `Encontramos un borrador sin guardar (${new Date(saved.savedAt).toLocaleString()}). ¿Deseas restaurarlo?`
+        `We found an unsaved draft (${new Date(saved.savedAt).toLocaleString()}). Would you like to restore it?`
       );
       if (restore) {
         setFormData({ ...emptyDraft(), ...saved.data });
@@ -146,11 +146,11 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
         if (!isEditing) localStorage.removeItem(DRAFT_KEY);
         navigate('/dashboard');
       } else {
-        alert('Error guardando la propiedad. Por favor, intenta de nuevo.');
+        alert('Error saving property. Please try again.');
       }
     } catch (error: any) {
       console.error('Submit error:', error);
-      alert('Ocurrió un error: ' + error.message);
+      alert('An error occurred: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -167,7 +167,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
     if (urls.length > 0) {
       setFormData(prev => ({ ...prev, fotos: [...(prev.fotos || []), ...urls] }));
     } else {
-      alert('Error subiendo imágenes');
+      alert('Error uploading images');
     }
     setIsUploading(false);
   };
@@ -189,7 +189,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-bold text-brand-primary">
-          {isEditing ? 'Editar Propiedad' : 'Agregar Propiedad'}
+          {isEditing ? 'Edit Property' : 'Add Property'}
         </h1>
         <div className="flex items-center gap-4 flex-wrap">
           <button
@@ -202,20 +202,20 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             }`}
           >
             <Star size={14} className={formData.featured ? 'fill-yellow-400 text-yellow-400' : ''} />
-            Destacada
+            Featured
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">Estado:</span>
+            <span className="text-sm text-gray-500">Status:</span>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
               className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-brand-accent"
             >
-              <option value="publicado">Publicado</option>
-              <option value="borrador">Borrador</option>
-              <option value="archivado">Archivado</option>
+              <option value="publicado">Published</option>
+              <option value="borrador">Draft</option>
+              <option value="archivado">Archived</option>
             </select>
           </div>
         </div>
@@ -223,14 +223,14 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
 
       {draftRestoredAt && (
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm rounded-lg px-4 py-2">
-          Borrador restaurado del {new Date(draftRestoredAt).toLocaleString()}.
+          Draft restored from {new Date(draftRestoredAt).toLocaleString()}.
         </div>
       )}
 
       <div className="bg-brand-white rounded-xl shadow-sm p-6 space-y-6 border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Título</label>
+            <label className="block text-sm font-medium text-gray-700">Title</label>
             <input
               type="text"
               name="titulo"
@@ -238,11 +238,11 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
               value={formData.titulo}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
-              placeholder="Ej. Casa Moderna en San Benito"
+              placeholder="e.g. Modern House in Downtown"
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Tipo de Operación</label>
+            <label className="block text-sm font-medium text-gray-700">Operation Type</label>
             <select
               name="tipo"
               required
@@ -250,12 +250,12 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
             >
-              <option value="venta">Venta</option>
-              <option value="alquiler">Alquiler</option>
+              <option value="venta">For Sale</option>
+              <option value="alquiler">For Rent</option>
             </select>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Tipo de Propiedad</label>
+            <label className="block text-sm font-medium text-gray-700">Property Type</label>
             <select
               name="property_type"
               value={formData.property_type || 'casa'}
@@ -268,7 +268,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             </select>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Disponibilidad</label>
+            <label className="block text-sm font-medium text-gray-700">Availability</label>
             <select
               name="sold_status"
               value={formData.sold_status || 'disponible'}
@@ -281,7 +281,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             </select>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Precio ($)</label>
+            <label className="block text-sm font-medium text-gray-700">Price ($)</label>
             <input
               type="number"
               name="precio"
@@ -294,7 +294,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             />
           </div>
           <div className="space-y-2 flex flex-col">
-            <label className="block text-sm font-medium text-gray-700">Negociable</label>
+            <label className="block text-sm font-medium text-gray-700">Negotiable</label>
             <label className="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -303,11 +303,11 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
                 onChange={(e) => setFormData(prev => ({ ...prev, negociable: e.target.checked }))}
                 className="rounded"
               />
-              <span className="text-sm text-gray-700">Precio negociable</span>
+              <span className="text-sm text-gray-700">Negotiable price</span>
             </label>
           </div>
           <div className="space-y-2 md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">Ubicación</label>
+            <label className="block text-sm font-medium text-gray-700">Location</label>
             <input
               type="text"
               name="ubicacion"
@@ -315,11 +315,11 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
               value={formData.ubicacion}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
-              placeholder="Ej. San Benito, San Salvador"
+              placeholder="e.g. Downtown, New York"
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">Descripción</label>
+            <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
               name="descripcion"
               required
@@ -327,11 +327,11 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
               value={formData.descripcion}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all resize-none"
-              placeholder="Describe la propiedad..."
+              placeholder="Describe the property..."
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Habitaciones</label>
+            <label className="block text-sm font-medium text-gray-700">Bedrooms</label>
             <input
               type="number"
               name="habitaciones"
@@ -342,7 +342,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Baños</label>
+            <label className="block text-sm font-medium text-gray-700">Bathrooms</label>
             <input
               type="number"
               name="banos"
@@ -354,7 +354,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Metros Cuadrados</label>
+            <label className="block text-sm font-medium text-gray-700">Square Feet</label>
             <input
               type="number"
               name="metros"
@@ -365,7 +365,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
             />
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">WhatsApp de Contacto</label>
+            <label className="block text-sm font-medium text-gray-700">Contact WhatsApp</label>
             <input
               type="text"
               name="whatsapp"
@@ -373,12 +373,12 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
               value={formData.whatsapp}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
-              placeholder="Ej. 50370000000"
+              placeholder="e.g. 15555550100"
             />
           </div>
           <div className="space-y-2 md:col-span-2">
             <label className="block text-sm font-medium text-gray-700">
-              URL de Video <span className="text-gray-400 font-normal">(opcional, YouTube o MP4)</span>
+              Video URL <span className="text-gray-400 font-normal">(optional, YouTube or MP4)</span>
             </label>
             <input
               type="url"
@@ -386,14 +386,14 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
               value={formData.video_url || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
-              placeholder="https://youtube.com/watch?v=... o https://.../video.mp4"
+              placeholder="https://youtube.com/watch?v=... or https://.../video.mp4"
             />
           </div>
         </div>
       </div>
 
       <div className="bg-brand-white rounded-xl shadow-sm p-6 space-y-4 border border-gray-100">
-        <h2 className="text-lg font-medium text-gray-900">Fotos</h2>
+        <h2 className="text-lg font-medium text-gray-900">Photos</h2>
 
         <input
           type="file"
@@ -413,13 +413,13 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
           {isUploading ? (
             <div className="flex flex-col items-center justify-center">
               <Loader2 className="animate-spin text-brand-accent h-12 w-12 mb-4" />
-              <p className="text-gray-600 font-medium">Subiendo imágenes...</p>
+              <p className="text-gray-600 font-medium">Uploading images...</p>
             </div>
           ) : (
             <>
               <UploadCloud className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-600 font-medium">Arrastra tus fotos aquí</p>
-              <p className="text-sm text-gray-400 mt-1">o haz clic para seleccionar</p>
+              <p className="text-gray-600 font-medium">Drag your photos here</p>
+              <p className="text-sm text-gray-400 mt-1">or click to select</p>
             </>
           )}
         </div>
@@ -461,7 +461,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
           className="px-6 py-3 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           disabled={isSubmitting || isUploading}
         >
-          Cancelar
+          Cancel
         </button>
         <button
           type="submit"
@@ -469,7 +469,7 @@ export default function PropertyForm({ initialData, isEditing }: PropertyFormPro
           className="px-6 py-3 bg-brand-accent hover:bg-brand-accent-hover text-brand-white font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-2"
         >
           {isSubmitting && <Loader2 className="animate-spin h-4 w-4" />}
-          {isEditing ? 'Guardar Cambios' : 'Publicar Propiedad'}
+          {isEditing ? 'Save Changes' : 'Publish Property'}
         </button>
       </div>
     </form>

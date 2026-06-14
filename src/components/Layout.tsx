@@ -10,12 +10,12 @@ export default function Layout() {
   const { user, signOut } = useAuth();
 
   const navLinks = [
-    { to: '/dashboard', icon: Home, label: 'Mis Propiedades' },
-    { to: '/agregar', icon: PlusSquare, label: 'Agregar Propiedad' },
-    { to: '/profile', icon: User, label: 'Mi Perfil' },
+    { to: '/dashboard', icon: Home, label: 'My Properties' },
+    { to: '/agregar', icon: PlusSquare, label: 'Add Property' },
+    { to: '/profile', icon: User, label: 'My Profile' },
   ];
 
-  const displayName = user?.user_metadata?.full_name || user?.email || 'Agente';
+  const displayName = user?.user_metadata?.full_name || user?.email || 'Agent';
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   const websiteUrl =
     (user?.user_metadata?.website_url as string | undefined) ||
@@ -30,7 +30,7 @@ export default function Layout() {
           <button
             onClick={() => signOut()}
             className="p-1 text-gray-300 hover:text-white transition-colors"
-            title="Cerrar sesión"
+            title="Sign out"
           >
             <LogOut size={20} />
           </button>
@@ -60,7 +60,7 @@ export default function Layout() {
             </div>
           )}
           <div className="overflow-hidden flex-1">
-            <p className="text-sm text-gray-400">Bienvenido,</p>
+            <p className="text-sm text-gray-400">Welcome,</p>
             <p className="font-medium truncate">{displayName}</p>
           </div>
         </div>
@@ -73,7 +73,7 @@ export default function Layout() {
             className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
           >
             <Globe size={20} />
-            Visitar mi sitio web
+            Visit my website
           </a>
         </div>
 
@@ -104,7 +104,7 @@ export default function Layout() {
             className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-gray-300 hover:bg-gray-800 hover:text-white transition-colors cursor-pointer"
           >
             <LogOut size={20} />
-            Cerrar sesión
+            Sign out
           </button>
         </div>
       </aside>

@@ -83,18 +83,18 @@ export default function SetPassword() {
     e.preventDefault();
     setError(null);
     if (password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres.');
+      setError('Password must be at least 8 characters.');
       return;
     }
     if (password !== confirm) {
-      setError('Las contraseñas no coinciden.');
+      setError('Passwords do not match.');
       return;
     }
     setSubmitting(true);
     const { error } = await supabase.auth.updateUser({ password });
     setSubmitting(false);
     if (error) {
-      setError(translateAuthError(error.message) || 'Error al guardar');
+      setError(translateAuthError(error.message) || 'Error saving');
       return;
     }
     setPhase('success');
@@ -113,15 +113,15 @@ export default function SetPassword() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-bg p-4">
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-4 text-center">
-          <h1 className="text-xl font-bold text-brand-primary">Enlace inválido</h1>
+          <h1 className="text-xl font-bold text-brand-primary">Invalid link</h1>
           <p className="text-sm text-gray-600">
-            {error || 'El enlace expiró o ya fue usado. Por favor solicita uno nuevo.'}
+            {error || 'The link expired or has already been used. Please request a new one.'}
           </p>
           <button
             onClick={() => navigate('/login', { replace: true })}
             className="w-full px-4 py-3 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium rounded-xl transition-colors cursor-pointer"
           >
-            Volver al inicio de sesión
+            Back to sign in
           </button>
         </div>
       </div>
@@ -133,8 +133,8 @@ export default function SetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-brand-bg p-4">
         <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-4 text-center">
           <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
-          <h1 className="text-xl font-bold text-brand-primary">Contraseña guardada</h1>
-          <p className="text-sm text-gray-600">Redirigiendo a tu panel...</p>
+          <h1 className="text-xl font-bold text-brand-primary">Password saved</h1>
+          <p className="text-sm text-gray-600">Redirecting to your dashboard...</p>
         </div>
       </div>
     );
@@ -145,7 +145,7 @@ export default function SetPassword() {
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
         <div className="text-center space-y-1">
           <h1 className="text-3xl font-bold text-brand-primary tracking-tight">{BRAND_CONFIG.name}</h1>
-          <p className="text-gray-500 text-sm">Crea tu contraseña</p>
+          <p className="text-gray-500 text-sm">Create your password</p>
         </div>
 
         {error && (
@@ -156,7 +156,7 @@ export default function SetPassword() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Nueva contraseña</label>
+            <label className="block text-sm font-medium text-gray-700">New password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -166,14 +166,14 @@ export default function SetPassword() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 pr-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="At least 8 characters"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(v => !v)}
                 className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
                 tabIndex={-1}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -181,7 +181,7 @@ export default function SetPassword() {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Confirmar contraseña</label>
+            <label className="block text-sm font-medium text-gray-700">Confirm password</label>
             <input
               type={showPassword ? 'text' : 'password'}
               required
@@ -190,7 +190,7 @@ export default function SetPassword() {
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent outline-none transition-all"
-              placeholder="Repite la contraseña"
+              placeholder="Repeat the password"
             />
           </div>
 
@@ -200,7 +200,7 @@ export default function SetPassword() {
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-accent hover:bg-brand-accent-hover text-white font-medium rounded-xl transition-colors disabled:opacity-60 cursor-pointer"
           >
             {submitting && <Loader2 className="animate-spin h-5 w-5" />}
-            Guardar contraseña
+            Save password
           </button>
         </form>
       </div>
