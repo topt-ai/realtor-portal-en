@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Home, PlusSquare, Menu, X, LogOut, Globe } from 'lucide-react';
+import { Home, PlusSquare, Menu, X, LogOut, Globe, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 
@@ -11,6 +11,7 @@ export default function Layout() {
   const navLinks = [
     { to: '/dashboard', icon: Home, label: 'Mis Propiedades' },
     { to: '/agregar', icon: PlusSquare, label: 'Agregar Propiedad' },
+    { to: '/profile', icon: User, label: 'Mi Perfil' },
   ];
 
   const displayName = user?.user_metadata?.full_name || user?.email || 'Agente';
