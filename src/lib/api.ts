@@ -54,14 +54,26 @@ function rowToProperty(row: ListingRow): Property {
 
 type ListingPayload = Omit<Property, 'id' | 'agent_id' | 'fotos'>;
 
+const toIntOrNull = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : null;
+};
+
+const toNumOrNull = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
 function payloadToRow(data: ListingPayload) {
   return {
     titulo: data.titulo,
-    precio: data.precio,
+    precio: toNumOrNull(data.precio),
     ubicacion: data.ubicacion,
     descripcion: data.descripcion,
-    habitaciones: data.habitaciones,
-    banos: data.banos,
+    habitaciones: toIntOrNull(data.habitaciones),
+    banos: toIntOrNull(data.banos),
     metros: data.metros,
     whatsapp: data.whatsapp,
     tipo: data.tipo,
