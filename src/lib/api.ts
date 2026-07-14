@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Property, PropertyType, SoldStatus } from '../types';
+import { Property, PropertyType, ScoreIssue, SoldStatus } from '../types';
 
 type ListingRow = {
   id: string;
@@ -21,6 +21,8 @@ type ListingRow = {
   website_url: string | null;
   video_url: string | null;
   agent_id: string;
+  listing_score: number | null;
+  score_issues: ScoreIssue[] | null;
   listing_images: { url: string; order_index: number }[];
 };
 
@@ -49,6 +51,8 @@ function rowToProperty(row: ListingRow): Property {
     video_url: row.video_url ?? undefined,
     fotos: images,
     agent_id: row.agent_id,
+    listing_score: row.listing_score ?? 0,
+    score_issues: row.score_issues ?? [],
   };
 }
 

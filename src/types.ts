@@ -7,6 +7,11 @@ export type PropertyType =
 
 export type SoldStatus = 'disponible' | 'vendido' | 'alquilado';
 
+export interface ScoreIssue {
+  issue: string;
+  points: number;
+}
+
 export interface Property {
   id: string;
   titulo: string;
@@ -28,4 +33,8 @@ export interface Property {
   website_url?: string;
   video_url?: string;
   agent_id?: string;
+  listing_score: number;
+  score_issues: ScoreIssue[];
 }
+
+export type ListingEventType = 'view' | 'contact_click' | 'favorite' | 'share' | 'schedule_click';

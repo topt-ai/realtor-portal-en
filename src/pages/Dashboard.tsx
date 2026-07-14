@@ -1,8 +1,22 @@
-import { useState, useEffect } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Trash2, Image as ImageIcon, Star } from 'lucide-react';
+import {
+  Edit2,
+  Trash2,
+  Image as ImageIcon,
+  Star,
+  Eye,
+  Users,
+  Trophy,
+  TrendingUp,
+  TrendingDown,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+} from 'lucide-react';
 import { Property, SoldStatus } from '@/types';
 import { fetchListings, deleteListing, toggleListingStatus, updateSoldStatus } from '@/lib/api';
+import { fetchAnalyticsOverview, AnalyticsOverview } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
 
 const STATUS_LABELS: Record<Property['status'], string> = {
@@ -29,9 +43,25 @@ const SOLD_STATUS_COLORS: Record<SoldStatus, string> = {
   alquilado: 'bg-blue-100 text-blue-700',
 };
 
+function getScoreTier(score: number): { label: string; badgeClass: string } {
+  if (score >= 80) return { label: 'Excelente', badgeClass: 'bg-green-100 text-green-700' };
+  if (score >= 50) return { label: 'Mejorable', badgeClass: 'bg-yellow-100 text-yellow-700' };
+  return { label: 'Necesitas mejorar', badgeClass: 'bg-red-100 text-red-700' };
+}
+
+interface Opportunity {
+  listingId: string;
+  titulo: string;
+  issue: string;
+  points: number;
+}
+
 export default function Dashboard() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState(true);
+  const [expandedScoreId, setExpandedScoreId] = useState<string | null>(null);
   const { user } = useAuth();
 
   const displayName = user?.user_metadata?.full_name || user?.email || 'Agent';
@@ -44,8 +74,17 @@ export default function Dashboard() {
     setLoading(false);
   };
 
+  const loadOverview = async () => {
+    if (!user) return;
+    setOverviewLoading(true);
+    const data = await fetchAnalyticsOverview(user.id);
+    setOverview(data);
+    setOverviewLoading(false);
+  };
+
   useEffect(() => {
     loadProperties();
+    loadOverview();
   }, [user]);
 
   const handleStatusChange = async (id: string, status: Property['status']) => {
@@ -77,6 +116,18 @@ export default function Dashboard() {
   const featured = properties.filter(p => p.featured).length;
   const vendidos = properties.filter(p => p.sold_status === 'vendido').length;
 
+  const opportunities: Opportunity[] = properties
+    .filter(p => p.listing_score < 80)
+    .flatMap(p =>
+      (p.score_issues ?? []).map(si => ({
+        listingId: p.id,
+        titulo: p.titulo,
+        issue: si.issue,
+        points: si.points,
+      }))
+    )
+    .sort((a, b) => b.points - a.points);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -90,6 +141,60 @@ export default function Dashboard() {
         >
           Add Property
         </Link>
+      </div>
+
+      {/* Analytics overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-brand-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
+            <Eye size={16} className="text-brand-accent" />
+            Visitantes este mes
+          </div>
+          <div className="flex items-end gap-2">
+            <span className="text-3xl font-bold text-brand-primary">
+              {overviewLoading ? '···' : overview?.visitsThisMonth ?? 0}
+            </span>
+            {!overviewLoading && overview && overview.visitsChangePct !== null && (
+              <span
+                className={`flex items-center gap-0.5 text-xs font-medium mb-1 ${
+                  overview.visitsChangePct >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}
+              >
+                {overview.visitsChangePct >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                {Math.abs(overview.visitsChangePct)}%
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-brand-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
+            <Users size={16} className="text-brand-accent" />
+            Nuevos leads
+          </div>
+          <span className="text-3xl font-bold text-brand-primary">
+            {overviewLoading ? '···' : overview?.newLeads ?? 0}
+          </span>
+        </div>
+
+        <div className="bg-brand-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-2">
+          <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
+            <Trophy size={16} className="text-brand-accent" />
+            Listing con mejor desempeño
+          </div>
+          {overviewLoading ? (
+            <span className="text-sm text-gray-400">···</span>
+          ) : overview?.topListing ? (
+            <div>
+              <p className="font-medium text-brand-primary truncate">{overview.topListing.titulo}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {overview.topListing.views} vistas · {overview.topListing.leads} leads
+              </p>
+            </div>
+          ) : (
+            <span className="text-sm text-gray-400">Sin datos aun</span>
+          )}
+        </div>
       </div>
 
       {/* Stats bar */}
@@ -108,6 +213,32 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Opportunities feed */}
+      {!loading && opportunities.length > 0 && (
+        <div className="bg-brand-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles size={18} className="text-brand-accent" />
+            <h2 className="text-lg font-medium text-brand-primary">Oportunidades</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {opportunities.map((opp, i) => (
+              <Link
+                key={`${opp.listingId}-${i}`}
+                to={`/editar/${opp.listingId}`}
+                className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <span className="text-sm text-gray-700">
+                  <span className="font-medium text-brand-primary">{opp.titulo}</span>: {opp.issue}
+                </span>
+                <span className="text-xs font-medium text-brand-accent whitespace-nowrap">
+                  +{opp.points} puntos
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="bg-brand-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[900px]">
@@ -115,6 +246,7 @@ export default function Dashboard() {
               <tr className="bg-gray-50 border-b border-gray-100 text-sm text-gray-500">
                 <th className="p-4 font-medium">Photo</th>
                 <th className="p-4 font-medium">Title</th>
+                <th className="p-4 font-medium">Score</th>
                 <th className="p-4 font-medium">Price</th>
                 <th className="p-4 font-medium">Location</th>
                 <th className="p-4 font-medium">Status</th>
@@ -125,94 +257,133 @@ export default function Dashboard() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-400">Loading...</td>
+                  <td colSpan={8} className="p-8 text-center text-gray-400">Loading...</td>
                 </tr>
               ) : properties.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-500">
+                  <td colSpan={8} className="p-8 text-center text-gray-500">
                     You have no published properties.
                   </td>
                 </tr>
               ) : (
-                properties.map((property) => (
-                  <tr key={property.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4">
-                      {property.fotos && property.fotos.length > 0 ? (
-                        <img
-                          src={property.fotos[0]}
-                          alt={property.titulo}
-                          className="w-16 h-16 object-cover rounded-lg"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
-                          <ImageIcon size={24} />
-                        </div>
+                properties.map((property) => {
+                  const tier = getScoreTier(property.listing_score);
+                  const isExpanded = expandedScoreId === property.id;
+                  return (
+                    <Fragment key={property.id}>
+                      <tr className="hover:bg-gray-50 transition-colors">
+                        <td className="p-4">
+                          {property.fotos && property.fotos.length > 0 ? (
+                            <img
+                              src={property.fotos[0]}
+                              alt={property.titulo}
+                              className="w-16 h-16 object-cover rounded-lg"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                              <ImageIcon size={24} />
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-brand-primary">{property.titulo}</span>
+                            {property.featured && (
+                              <Star size={14} className="text-yellow-400 fill-yellow-400 shrink-0" />
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-400 capitalize">
+                            {property.property_type ? `${property.property_type} · ` : ''}{property.tipo}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedScoreId(isExpanded ? null : property.id)}
+                            className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full cursor-pointer ${tier.badgeClass}`}
+                          >
+                            {property.listing_score} · {tier.label}
+                            {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                          </button>
+                        </td>
+                        <td className="p-4 text-gray-600">
+                          ${Number(property.precio || 0).toLocaleString()}
+                          {property.negociable && (
+                            <span className="block text-xs text-gray-400">Negotiable</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-gray-600">{property.ubicacion}</td>
+                        <td className="p-4">
+                          <select
+                            value={property.status}
+                            onChange={(e) =>
+                              handleStatusChange(property.id, e.target.value as Property['status'])
+                            }
+                            className={`text-xs font-medium px-2 py-1 rounded-full border-0 outline-none cursor-pointer ${STATUS_COLORS[property.status]}`}
+                          >
+                            {(Object.keys(STATUS_LABELS) as Property['status'][]).map(s => (
+                              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-4">
+                          <select
+                            value={property.sold_status}
+                            onChange={(e) =>
+                              handleSoldStatusChange(property.id, e.target.value as SoldStatus)
+                            }
+                            className={`text-xs font-medium px-2 py-1 rounded-full border-0 outline-none cursor-pointer ${SOLD_STATUS_COLORS[property.sold_status]}`}
+                          >
+                            {(Object.keys(SOLD_STATUS_LABELS) as SoldStatus[]).map(s => (
+                              <option key={s} value={s}>{SOLD_STATUS_LABELS[s]}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              to={`/editar/${property.id}`}
+                              className="p-2 text-gray-400 hover:text-brand-accent transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 size={18} />
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(property.id)}
+                              className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr key={`${property.id}-issues`} className="bg-gray-50">
+                          <td colSpan={8} className="px-4 pb-4">
+                            {property.score_issues && property.score_issues.length > 0 ? (
+                              <ul className="space-y-1 max-w-md">
+                                {property.score_issues.map((issue, i) => (
+                                  <li
+                                    key={i}
+                                    className="text-sm text-gray-600 flex items-center justify-between"
+                                  >
+                                    <span>{issue.issue}</span>
+                                    <span className="text-brand-accent font-medium whitespace-nowrap ml-3">
+                                      +{issue.points} puntos
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-sm text-gray-500">No hay problemas detectados.</p>
+                            )}
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-brand-primary">{property.titulo}</span>
-                        {property.featured && (
-                          <Star size={14} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-400 capitalize">
-                        {property.property_type ? `${property.property_type} · ` : ''}{property.tipo}
-                      </span>
-                    </td>
-                    <td className="p-4 text-gray-600">
-                      ${Number(property.precio || 0).toLocaleString()}
-                      {property.negociable && (
-                        <span className="block text-xs text-gray-400">Negotiable</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-gray-600">{property.ubicacion}</td>
-                    <td className="p-4">
-                      <select
-                        value={property.status}
-                        onChange={(e) =>
-                          handleStatusChange(property.id, e.target.value as Property['status'])
-                        }
-                        className={`text-xs font-medium px-2 py-1 rounded-full border-0 outline-none cursor-pointer ${STATUS_COLORS[property.status]}`}
-                      >
-                        {(Object.keys(STATUS_LABELS) as Property['status'][]).map(s => (
-                          <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="p-4">
-                      <select
-                        value={property.sold_status}
-                        onChange={(e) =>
-                          handleSoldStatusChange(property.id, e.target.value as SoldStatus)
-                        }
-                        className={`text-xs font-medium px-2 py-1 rounded-full border-0 outline-none cursor-pointer ${SOLD_STATUS_COLORS[property.sold_status]}`}
-                      >
-                        {(Object.keys(SOLD_STATUS_LABELS) as SoldStatus[]).map(s => (
-                          <option key={s} value={s}>{SOLD_STATUS_LABELS[s]}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/editar/${property.id}`}
-                          className="p-2 text-gray-400 hover:text-brand-accent transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 size={18} />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(property.id)}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                    </Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>
