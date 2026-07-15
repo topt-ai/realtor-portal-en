@@ -1,16 +1,25 @@
-import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { Home, PlusSquare, Menu, X, LogOut, Globe, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Home, PlusSquare, Menu, X, LogOut, Globe, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
+import { fetchNewLeadsCount } from '@/lib/leads';
 import { AGENT_CONFIG, BRAND_CONFIG } from '@/config';
 
 export default function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
   const { user, signOut } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!user) return;
+    fetchNewLeadsCount(user.id).then(setNewLeadsCount);
+  }, [user, location.pathname]);
 
   const navLinks = [
     { to: '/dashboard', icon: Home, label: 'My Properties' },
+    { to: '/leads', icon: Users, label: 'Leads', badge: newLeadsCount },
     { to: '/agregar', icon: PlusSquare, label: 'Add Property' },
     { to: '/profile', icon: User, label: 'My Profile' },
   ];
@@ -94,6 +103,11 @@ export default function Layout() {
             >
               <link.icon size={20} />
               {link.label}
+              {'badge' in link && link.badge ? (
+                <span className="ml-auto bg-brand-accent text-brand-white text-xs font-semibold rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">
+                  {link.badge}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>

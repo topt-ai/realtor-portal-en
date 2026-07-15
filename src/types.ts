@@ -38,3 +38,20 @@ export interface Property {
 }
 
 export type ListingEventType = 'view' | 'contact_click' | 'favorite' | 'share' | 'schedule_click';
+
+export type LeadStatus = 'new' | 'contacted' | 'archived';
+
+export interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  looking_for: string | null;
+  timeline: string | null;
+  message: string | null;
+  listing_id: string | null;
+  listing_titulo: string | null;
+  agent_id: string | null;
+  status: LeadStatus;
+  created_at: string;
+}

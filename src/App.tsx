@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import AddProperty from './pages/AddProperty';
 import EditProperty from './pages/EditProperty';
 import Profile from './pages/Profile';
+import Leads from './pages/Leads';
 import { Loader2 } from 'lucide-react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ export default function App() {
           }
         >
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/leads" element={<Leads />} />
           <Route path="/agregar" element={<AddProperty />} />
           <Route path="/editar/:id" element={<EditProperty />} />
           <Route path="/profile" element={<Profile />} />
