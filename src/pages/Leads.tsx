@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Mail, Phone } from 'lucide-react';
 import { Lead, LeadStatus } from '@/types';
 import { fetchLeads, updateLeadStatus } from '@/lib/leads';
 import { formatRelativeTime } from '@/lib/format';
 import { useAuth } from '@/lib/auth';
 
+const PUBLIC_SITE_URL = 'https://realtor-website-en.vercel.app';
+
 const STATUS_LABELS: Record<LeadStatus, string> = {
-  new: 'Nuevo',
-  contacted: 'Contactado',
-  archived: 'Archivado',
+  new: 'New',
+  contacted: 'Contacted',
+  archived: 'Archived',
 };
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
@@ -21,25 +22,25 @@ const STATUS_COLORS: Record<LeadStatus, string> = {
 type FilterTab = 'all' | LeadStatus;
 
 const TABS: { key: FilterTab; label: string }[] = [
-  { key: 'all', label: 'Todos' },
-  { key: 'new', label: 'Nuevos' },
-  { key: 'contacted', label: 'Contactados' },
-  { key: 'archived', label: 'Archivados' },
+  { key: 'all', label: 'All' },
+  { key: 'new', label: 'New' },
+  { key: 'contacted', label: 'Contacted' },
+  { key: 'archived', label: 'Archived' },
 ];
 
 const LOOKING_FOR_BADGES: Record<string, { label: string; className: string }> = {
-  buying: { label: 'Comprando', className: 'bg-blue-100 text-blue-700' },
-  comprando: { label: 'Comprando', className: 'bg-blue-100 text-blue-700' },
-  comprar: { label: 'Comprando', className: 'bg-blue-100 text-blue-700' },
-  selling: { label: 'Vendiendo', className: 'bg-purple-100 text-purple-700' },
-  vendiendo: { label: 'Vendiendo', className: 'bg-purple-100 text-purple-700' },
-  vender: { label: 'Vendiendo', className: 'bg-purple-100 text-purple-700' },
-  renting: { label: 'Alquilando', className: 'bg-green-100 text-green-700' },
-  alquilando: { label: 'Alquilando', className: 'bg-green-100 text-green-700' },
-  alquilar: { label: 'Alquilando', className: 'bg-green-100 text-green-700' },
-  exploring: { label: 'Explorando', className: 'bg-amber-100 text-amber-700' },
-  explorando: { label: 'Explorando', className: 'bg-amber-100 text-amber-700' },
-  explorar: { label: 'Explorando', className: 'bg-amber-100 text-amber-700' },
+  buying: { label: 'Buying', className: 'bg-blue-100 text-blue-700' },
+  comprando: { label: 'Buying', className: 'bg-blue-100 text-blue-700' },
+  comprar: { label: 'Buying', className: 'bg-blue-100 text-blue-700' },
+  selling: { label: 'Selling', className: 'bg-purple-100 text-purple-700' },
+  vendiendo: { label: 'Selling', className: 'bg-purple-100 text-purple-700' },
+  vender: { label: 'Selling', className: 'bg-purple-100 text-purple-700' },
+  renting: { label: 'Renting', className: 'bg-green-100 text-green-700' },
+  alquilando: { label: 'Renting', className: 'bg-green-100 text-green-700' },
+  alquilar: { label: 'Renting', className: 'bg-green-100 text-green-700' },
+  exploring: { label: 'Just browsing', className: 'bg-amber-100 text-amber-700' },
+  explorando: { label: 'Just browsing', className: 'bg-amber-100 text-amber-700' },
+  explorar: { label: 'Just browsing', className: 'bg-amber-100 text-amber-700' },
 };
 
 function getLookingForBadge(value: string | null): { label: string; className: string } | null {
@@ -162,12 +163,14 @@ export default function Leads() {
                       </td>
                       <td className="p-4">
                         {lead.listing_id ? (
-                          <Link
-                            to={`/editar/${lead.listing_id}`}
+                          <a
+                            href={`${PUBLIC_SITE_URL}/properties/${lead.listing_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-sm text-brand-accent hover:underline"
                           >
                             {lead.listing_titulo ?? 'Property'}
-                          </Link>
+                          </a>
                         ) : (
                           <span className="text-sm text-gray-500">General inquiry</span>
                         )}
